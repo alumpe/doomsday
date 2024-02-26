@@ -72,16 +72,24 @@
 				>
 			</p>
 			{#if isSolutionRevealed}
+				<h2>Calculating year doomsday</h2>
 				<p>12 fits {solution.twelve} times into {solution.yearInCentury}.</p>
 				<p>The rest (modulo 12) is {solution.moduloTwelve}.</p>
 				<p>4 fits {solution.fourInRest} times into {solution.moduloTwelve}.</p>
 				<p>The century doomsday for {solution.century} is {solution.centuryDoomsday}.</p>
 
 				<p>
-					Calculated doomsday: ({solution.twelve} + {solution.moduloTwelve} + {solution.fourInRest}
-					+
-					{solution.centuryDoomsday}) % 7 = {solution.doomsday} ({daysOfWeek[solution.doomsday]})
+					Calculated doomsday for {date.getFullYear()}:
+					<span class="no-wrap"
+						>({solution.twelve} + {solution.moduloTwelve} + {solution.fourInRest}
+						+
+						{solution.centuryDoomsday}) % 7 = {solution.doomsday} ({daysOfWeek[
+							solution.doomsday
+						]})</span
+					>
 				</p>
+
+				<h2>Extrapolate to the day</h2>
 
 				<p>
 					Doomsday for {date.toLocaleString('default', { month: 'long' })}: {date.getDoomsdayOfMonth()}.
@@ -113,8 +121,19 @@
 </div>
 
 <style lang="scss">
+	button {
+		padding: 0.5rem 1rem;
+		@media (max-width: 600px) {
+			width: 100%;
+		}
+	}
+
 	.container {
 		margin-inline: auto;
 		width: min(40rem, calc(100vw - 2rem));
+	}
+
+	.no-wrap {
+		white-space: nowrap;
 	}
 </style>
