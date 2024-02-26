@@ -1,15 +1,16 @@
 <script lang="ts">
-	const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+	import { DDate } from '$lib/date';
+	import { daysOfWeek } from '$lib/solution';
 
 	const startDate = new Date('1900-01-01');
 	const endDate = new Date('2024-01-01');
 	const difference = endDate.getTime() - startDate.getTime();
 
-	let date = $state<Date | undefined>(undefined);
+	let date = $state<DDate | undefined>(undefined);
 
-	let weekday = $derived(date && daysOfWeek[date.getDay()]);
+	const weekday = $derived(date?.toLocaleString('default', { weekday: 'long' }));
 
-	let solution = $derived.by(() => {
+	const solution = $derived.by(() => {
 		if (date === undefined) return undefined;
 
 		const century = date.getFullYear() - (date.getFullYear() % 100);
@@ -30,6 +31,7 @@
 		return {
 			century,
 			centuryDoomsday,
+			yearInCentury,
 			twelve,
 			moduloTwelve,
 			fourInRest,
@@ -42,44 +44,77 @@
 
 	function generateDate() {
 		const randomTime = Math.random() * difference;
-		date = new Date(Math.floor(startDate.getTime() + randomTime));
+		date = new DDate(Math.floor(startDate.getTime() + randomTime));
 	}
 </script>
 
-<h1>Doomsday method</h1>
+<div class="container">
+	<h1>Doomsday method</h1>
 
-<button onclick={generateDate}>Generate</button>
+	<button onclick={generateDate}>Generate day</button>
 
-{#if date !== undefined}
-	<p>
-		{date.toLocaleDateString(undefined, {
-			year: 'numeric',
-			month: 'long',
-			day: 'numeric'
-		})}
-	</p>
-{/if}
-
-<!-- Solution path -->
-{#if solution !== undefined}
-	<button onclick={() => (isSolutionRevealed = !isSolutionRevealed)}
-		>{isSolutionRevealed ? 'Hide' : 'Show'} solution path</button
-	>
-	{#if isSolutionRevealed}
+	{#if date !== undefined}
 		<p>
-			Calculated doomsday: ({solution.twelve} + {solution.moduloTwelve} + {solution.fourInRest} + {solution.centuryDoomsday})
-			% 7 = {solution.doomsday}
+			<strong
+				>{date.toLocaleDateString(undefined, {
+					year: 'numeric',
+					month: 'long',
+					day: 'numeric'
+				})}</strong
+			>
 		</p>
-		<p>{daysOfWeek[solution.doomsday]}</p>
-	{/if}
-{/if}
 
-<!-- Weekday -->
-{#if weekday !== undefined}
-	<button onclick={() => (isWeekdayRevealed = !isWeekdayRevealed)}
-		>{isWeekdayRevealed ? 'Hide' : 'Show'} weekday</button
-	>
-	{#if isWeekdayRevealed}
-		<p>{weekday}</p>
+		<!-- Solution path -->
+		{#if solution !== undefined}
+			<p>
+				<button onclick={() => (isSolutionRevealed = !isSolutionRevealed)}
+					>{isSolutionRevealed ? 'Hide' : 'Show'} solution path</button
+				>
+			</p>
+			{#if isSolutionRevealed}
+				<p>12 fits {solution.twelve} times into {solution.yearInCentury}.</p>
+				<p>The rest (modulo 12) is {solution.moduloTwelve}.</p>
+				<p>4 fits {solution.fourInRest} times into {solution.moduloTwelve}.</p>
+				<p>The century doomsday for {solution.century} is {solution.centuryDoomsday}.</p>
+
+				<p>
+					Calculated doomsday: ({solution.twelve} + {solution.moduloTwelve} + {solution.fourInRest}
+					+
+					{solution.centuryDoomsday}) % 7 = {solution.doomsday} ({daysOfWeek[solution.doomsday]})
+				</p>
+
+				<p>
+					Doomsday for {date.toLocaleString('default', { month: 'long' })}: {date.getDoomsdayOfMonth()}.
+				</p>
+
+				<p>
+					{date.toLocaleString('default', { month: 'long' })}
+					{date.getDoomsdayOfMonth()}. is a {daysOfWeek[solution.doomsday]}.
+				</p>
+
+				<p>
+					{date.toLocaleString('default', { month: 'long', day: 'numeric' })} is a {daysOfWeek[
+						(solution.doomsday + date.getDate() - date.getDoomsdayOfMonth() + 35) % 7
+					]}.
+				</p>
+			{/if}
+		{/if}
+
+		<!-- Weekday -->
+		{#if weekday !== undefined}
+			<button onclick={() => (isWeekdayRevealed = !isWeekdayRevealed)}
+				>{isWeekdayRevealed ? 'Hide' : 'Show'} weekday</button
+			>
+			{#if isWeekdayRevealed}
+				<p>{weekday}</p>
+			{/if}
+		{/if}
 	{/if}
-{/if}
+</div>
+
+<style lang="scss">
+	.container {
+		margin-inline: auto;
+		width: min(40rem, calc(100vw - 2rem));
+	}
+</style>
