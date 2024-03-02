@@ -1,17 +1,17 @@
 <script lang="ts">
-	import { DDate } from '$lib/date';
+	import { getDoomsdayOfMonth } from '$lib/date';
 	import { daysOfWeek } from '$lib/solution';
 
 	const startDate = new Date('1900-01-01');
-	const endDate = new Date('2024-01-01');
+	const endDate = new Date();
 	const difference = endDate.getTime() - startDate.getTime();
 
-	let date = $state<DDate | undefined>(undefined);
+	let date = $state<Date | null>(null);
 
-	const weekday = $derived(date?.toLocaleString('default', { weekday: 'long' }));
+	const weekday = $derived(date?.toLocaleString('en', { weekday: 'long' }));
 
 	const solution = $derived.by(() => {
-		if (date === undefined) return undefined;
+		if (!date) return undefined;
 
 		const century = date.getFullYear() - (date.getFullYear() % 100);
 		const centuryDoomsday = (() => {
@@ -44,28 +44,33 @@
 
 	function generateDate() {
 		const randomTime = Math.random() * difference;
-		date = new DDate(Math.floor(startDate.getTime() + randomTime));
+		date = new Date(Math.floor(startDate.getTime() + randomTime));
 	}
+
+	const formatDate = (d: Date) => {
+		const day = String(d.getDate()).padStart(2, '0');
+		const month = String(d.getMonth() + 1).padStart(2, '0');
+		const year = d.getFullYear();
+
+		return `${year}-${month}-${day}`;
+	};
 </script>
 
 <div class="container">
 	<h1>Doomsday method</h1>
 
-	<button onclick={generateDate}>Generate day</button>
+	<p><button onclick={generateDate}>Generate random day</button></p>
+	<input
+		type="date"
+		min="1900-01-01"
+		max="2099-12-31"
+		value={date ? formatDate(date) : null}
+		onchange={(e) => (date = e.currentTarget.valueAsDate)}
+	/>
 
-	{#if date !== undefined}
-		<p>
-			<strong
-				>{date.toLocaleDateString(undefined, {
-					year: 'numeric',
-					month: 'long',
-					day: 'numeric'
-				})}</strong
-			>
-		</p>
-
+	{#if !!date}
 		<!-- Solution path -->
-		{#if solution !== undefined}
+		{#if !!solution}
 			<p>
 				<button onclick={() => (isSolutionRevealed = !isSolutionRevealed)}
 					>{isSolutionRevealed ? 'Hide' : 'Show'} solution path</button
@@ -92,24 +97,24 @@
 				<h2>Extrapolate to the day</h2>
 
 				<p>
-					Doomsday for {date.toLocaleString('default', { month: 'long' })}: {date.getDoomsdayOfMonth()}.
+					Doomsday for {date.toLocaleString('en', { month: 'long' })}: {getDoomsdayOfMonth(date)}.
 				</p>
 
 				<p>
-					{date.toLocaleString('default', { month: 'long' })}
-					{date.getDoomsdayOfMonth()}. is a {daysOfWeek[solution.doomsday]}.
+					{date.toLocaleString('en', { month: 'long' })}
+					{getDoomsdayOfMonth(date)}. is a {daysOfWeek[solution.doomsday]}.
 				</p>
 
 				<p>
-					{date.toLocaleString('default', { month: 'long', day: 'numeric' })} is a {daysOfWeek[
-						(solution.doomsday + date.getDate() - date.getDoomsdayOfMonth() + 35) % 7
+					{date.toLocaleString('en', { month: 'long', day: 'numeric' })} is a {daysOfWeek[
+						(solution.doomsday + date.getDate() - getDoomsdayOfMonth(date) + 35) % 7
 					]}.
 				</p>
 			{/if}
 		{/if}
 
 		<!-- Weekday -->
-		{#if weekday !== undefined}
+		{#if !!weekday}
 			<button onclick={() => (isWeekdayRevealed = !isWeekdayRevealed)}
 				>{isWeekdayRevealed ? 'Hide' : 'Show'} weekday</button
 			>
